@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2d6b;
+    --navy-dark: #0f1d4a;
+    --navy-light: #2a3d8b;
+    --green: #1a7c3e;
+    --green-light: #22a052;
+    --green-pale: #e8f5ee;
+    --navy-pale: #e8ecf8;
+    --bg: #f4f6fb;
+    --white: #ffffff;
+    --text: #1a1f36;
+    --text-muted: #6b7280;
+    --border: #e2e8f0;
+    --shadow: 0 4px 24px rgba(26,45,107,0.10);
+    --shadow-lg: 0 8px 40px rgba(26,45,107,0.16);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Manrope',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes slideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(26,124,62,0.4)} 50%{box-shadow:0 0 0 10px rgba(26,124,62,0)} }
+  @keyframes ping { 0%{transform:scale(1);opacity:1} 100%{transform:scale(2.2);opacity:0} }
+  @keyframes shimmer { from{background-position:-400px 0} to{background-position:400px 0} }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  @keyframes notif-slide { from{opacity:0;transform:translateX(120%)} to{opacity:1;transform:translateX(0)} }
+  @keyframes dot-bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.5} 40%{transform:scale(1);opacity:1} }
+
+  /* SPLASH / AUTH */
+  #splash {
+    position:fixed; inset:0; z-index:1000;
+    background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 50%, var(--green) 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    transition: opacity 0.6s ease;
+  }
+  #splash.hide { opacity:0; pointer-events:none; }
+  .splash-logo { animation: float 3s ease-in-out infinite; }
+  .splash-logo svg { width:100px; height:100px; }
+  .splash-title { color:#fff; font-size:2.4rem; font-weight:800; margin-top:16px; letter-spacing:-1px; }
+  .splash-sub { color:rgba(255,255,255,0.65); font-size:0.95rem; margin-top:6px; }
+
+  /* AUTH SCREEN */
+  #authScreen {
+    display:none; position:fixed; inset:0; z-index:900;
+    background: linear-gradient(135deg, var(--navy-dark) 0%, #1a2d6b 60%, #0f3d20 100%);
+    align-items:center; justify-content:center;
+  }
+  #authScreen.active { display:flex; }
+  .auth-card {
+    background:var(--white); border-radius:24px; padding:40px;
+    width:100%; max-width:420px; animation:fadeIn 0.5s ease;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+  }
+  .auth-logo { display:flex; align-items:center; gap:12px; margin-bottom:32px; }
+  .auth-logo-icon { width:44px; height:44px; background:linear-gradient(135deg,var(--navy),var(--green)); border-radius:12px; display:flex; align-items:center; justify-content:center; }
+  .auth-logo-text { font-size:1.5rem; font-weight:800; }
+  .auth-logo-text span { color:var(--navy); }
+  .auth-logo-text em { color:var(--green); font-style:normal; }
+  .auth-tabs { display:flex; background:var(--bg); border-radius:12px; padding:4px; margin-bottom:28px; }
+  .auth-tab { flex:1; padding:10px; text-align:center; font-size:0.875rem; font-weight:600; border-radius:9px; cursor:pointer; transition:all 0.25s; color:var(--text-muted); }
+  .auth-tab.active { background:var(--white); color:var(--navy); box-shadow:var(--shadow); }
+  .form-group { margin-bottom:16px; }
+  .form-label { display:block; font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+  .form-input { width:100%; padding:13px 16px; border:1.5px solid var(--border); border-radius:10px; font-family:'Manrope',sans-serif; font-size:0.95rem; transition:border 0.2s; outline:none; background:var(--bg); }
+  .form-input:focus { border-color:var(--navy); background:var(--white); }
+  .form-select { width:100%; padding:13px 16px; border:1.5px solid var(--border); border-radius:10px; font-family:'Manrope',sans-serif; font-size:0.95rem; outline:none; background:var(--bg); cursor:pointer; }
+  .form-select:focus { border-color:var(--navy); background:var(--white); }
+  .btn-primary { width:100%; padding:14px; background:linear-gradient(135deg,var(--navy),var(--navy-light)); color:#fff; border:none; border-radius:12px; font-family:'Manrope',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; transition:all 0.2s; margin-top:8px; }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(26,45,107,0.35); }
+  .btn-primary:active { transform:translateY(0); }
+
+  /* MAIN APP */
+  #app { display:none; min-height:100vh; }
+  #app.active { display:flex; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:260px; min-height:100vh; background:linear-gradient(180deg,var(--navy-dark) 0%,var(--navy) 100%);
+    display:flex; flex-direction:column; padding:0; position:fixed; left:0; top:0; bottom:0; z-index:100;
+    transition: transform 0.3s ease;
+  }
+  .sidebar-header { padding:24px 20px 20px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .sidebar-logo { display:flex; align-items:center; gap:10px; }
+  .sidebar-logo-icon { width:38px; height:38px; background:linear-gradient(135deg,var(--green),var(--green-light)); border-radius:10px; display:flex; align-items:center; justify-content:center; }
+  .sidebar-logo-text { font-size:1.2rem; font-weight:800; color:#fff; letter-spacing:-0.5px; }
+  .sidebar-logo-text em { color:#4ade80; font-style:normal; }
+  .sidebar-user { padding:16px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .user-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--green),#4ade80); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; color:#fff; flex-shrink:0; }
+  .user-info { overflow:hidden; }
+  .user-name { font-size:0.875rem; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .user-role { font-size:0.75rem; color:rgba(255,255,255,0.5); }
+  .sidebar-nav { flex:1; padding:16px 12px; overflow-y:auto; }
+  .nav-section { margin-bottom:24px; }
+  .nav-section-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:rgba(255,255,255,0.3); padding:0 10px; margin-bottom:8px; }
+  .nav-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:10px; cursor:pointer; transition:all 0.2s; color:rgba(255,255,255,0.65); font-size:0.875rem; font-weight:500; position:relative; }
+  .nav-item:hover { background:rgba(255,255,255,0.08); color:#fff; }
+  .nav-item.active { background:rgba(255,255,255,0.12); color:#fff; }
+  .nav-item.active::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:3px; height:20px; background:var(--green-light); border-radius:0 3px 3px 0; }
+  .nav-icon { width:18px; height:18px; flex-shrink:0; }
+  .nav-badge { margin-left:auto; background:var(--green-light); color:#fff; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:20px; }
+  .sidebar-footer { padding:16px 20px; border-top:1px solid rgba(255,255,255,0.08); }
+  .btn-logout { display:flex; align-items:center; gap:8px; color:rgba(255,255,255,0.5); font-size:0.85rem; cursor:pointer; transition:color 0.2s; background:none; border:none; font-family:'Manrope',sans-serif; }
+  .btn-logout:hover { color:#fff; }
+
+  /* MAIN CONTENT */
+  .main { margin-left:260px; flex:1; padding:28px; min-height:100vh; }
+  .page { display:none; animation:fadeIn 0.4s ease; }
+  .page.active { display:block; }
+
+  /* TOPBAR */
+  .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+  .topbar-title { font-size:1.6rem; font-weight:800; color:var(--text); letter-spacing:-0.5px; }
+  .topbar-subtitle { font-size:0.875rem; color:var(--text-muted); margin-top:2px; }
+  .topbar-actions { display:flex; align-items:center; gap:12px; }
+  .btn-icon { width:42px; height:42px; border-radius:10px; border:1.5px solid var(--border); background:var(--white); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; position:relative; }
+  .btn-icon:hover { border-color:var(--navy); }
+  .notif-dot { position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:50%; background:var(--green-light); }
+  .notif-dot::after { content:''; position:absolute; inset:-2px; border-radius:50%; background:var(--green-light); animation:ping 1.5s ease infinite; }
+
+  /* STATS */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  .stat-card { background:var(--white); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); transition:transform 0.2s; animation:fadeIn 0.5s ease both; }
+  .stat-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); }
+  .stat-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; font-size:1.2rem; }
+  .stat-icon.navy { background:var(--navy-pale); }
+  .stat-icon.green { background:var(--green-pale); }
+  .stat-icon.orange { background:#fff4e6; }
+  .stat-icon.red { background:#fef2f2; }
+  .stat-value { font-size:1.8rem; font-weight:800; color:var(--text); letter-spacing:-1px; font-family:'Space Mono',monospace; }
+  .stat-label { font-size:0.8rem; color:var(--text-muted); margin-top:4px; font-weight:500; }
+  .stat-change { font-size:0.75rem; margin-top:8px; font-weight:600; }
+  .stat-change.up { color:var(--green); }
+  .stat-change.down { color:#ef4444; }
+
+  /* CARDS */
+  .card { background:var(--white); border-radius:var(--radius); padding:22px; box-shadow:var(--shadow); margin-bottom:20px; }
+  .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .card-title { font-size:1rem; font-weight:700; color:var(--text); }
+  .card-action { font-size:0.8rem; color:var(--navy); font-weight:600; cursor:pointer; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+
+  /* ATTENDANCE TABLE */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); padding:10px 14px; text-align:left; border-bottom:1.5px solid var(--border); }
+  td { padding:13px 14px; font-size:0.875rem; border-bottom:1px solid var(--border); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--bg); }
+  .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+  .status-badge::before { content:''; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .badge-present { background:#dcfce7; color:#15803d; }
+  .badge-present::before { background:#15803d; }
+  .badge-absent { background:#fef2f2; color:#dc2626; }
+  .badge-absent::before { background:#dc2626; }
+  .badge-late { background:#fef9c3; color:#a16207; }
+  .badge-late::before { background:#a16207; }
+  .badge-pending { background:#f1f5f9; color:#64748b; }
+  .badge-pending::before { background:#94a3b8; }
+
+  /* NOTIFICATIONS */
+  .notif-list { display:flex; flex-direction:column; gap:10px; }
+  .notif-item { display:flex; align-items:flex-start; gap:14px; padding:14px 16px; border-radius:var(--radius-sm); border:1px solid var(--border); transition:all 0.2s; cursor:pointer; }
+  .notif-item:hover { border-color:var(--navy); background:var(--navy-pale); }
+  .notif-item.unread { border-left:3px solid var(--navy); }
+  .notif-item.urgent { border-left:3px solid #ef4444; background:#fef2f2; }
+  .notif-item.success { border-left:3px solid var(--green); background:var(--green-pale); }
+  .notif-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .notif-icon.red { background:#fee2e2; }
+  .notif-icon.green { background:var(--green-pale); }
+  .notif-icon.blue { background:var(--navy-pale); }
+  .notif-icon.orange { background:#fff4e6; }
+  .notif-body { flex:1; }
+  .notif-title { font-size:0.875rem; font-weight:700; color:var(--text); }
+  .notif-desc { font-size:0.8rem; color:var(--text-muted); margin-top:2px; line-height:1.5; }
+  .notif-time { font-size:0.72rem; color:var(--text-muted); margin-top:4px; }
+
+  /* TEACHER SUBSTITUTE */
+  .substitute-card { border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:16px; transition:all 0.25s; cursor:pointer; }
+  .substitute-card:hover { border-color:var(--green); background:var(--green-pale); }
+  .substitute-card.selected { border-color:var(--green); background:var(--green-pale); }
+  .teacher-row { display:flex; align-items:center; gap:12px; }
+  .teacher-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem; color:#fff; flex-shrink:0; }
+  .teacher-name { font-size:0.9rem; font-weight:700; }
+  .teacher-subject { font-size:0.78rem; color:var(--text-muted); }
+  .free-badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.7rem; font-weight:700; background:var(--green-pale); color:var(--green); margin-top:4px; }
+
+  /* SCHEDULE */
+  .schedule-item { display:flex; align-items:center; gap:14px; padding:14px; border-radius:var(--radius-sm); margin-bottom:8px; transition:all 0.2s; }
+  .schedule-item:hover { background:var(--bg); }
+  .schedule-time { font-family:'Space Mono',monospace; font-size:0.8rem; color:var(--text-muted); width:90px; flex-shrink:0; }
+  .schedule-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .schedule-dot.active { background:var(--green-light); animation:pulse 2s infinite; }
+  .schedule-dot.done { background:var(--border); }
+  .schedule-dot.upcoming { background:var(--navy); }
+  .schedule-info { flex:1; }
+  .schedule-name { font-size:0.875rem; font-weight:600; }
+  .schedule-teacher { font-size:0.78rem; color:var(--text-muted); }
+  .schedule-room { font-size:0.78rem; color:var(--navy); font-weight:600; }
+
+  /* FLOATING NOTIFICATIONS */
+  #notifToast { position:fixed; bottom:28px; right:28px; z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+  .toast { background:var(--white); border-radius:14px; padding:14px 18px; box-shadow:0 8px 30px rgba(0,0,0,0.18); display:flex; align-items:flex-start; gap:12px; min-width:300px; max-width:360px; pointer-events:all; animation:notif-slide 0.4s ease; border-left:4px solid var(--navy); }
+  .toast.green { border-left-color:var(--green); }
+  .toast.red { border-left-color:#ef4444; }
+  .toast-icon { font-size:1.2rem; flex-shrink:0; }
+  .toast-title { font-size:0.875rem; font-weight:700; color:var(--text); }
+  .toast-desc { font-size:0.78rem; color:var(--text-muted); margin-top:2px; }
+
+  /* PROGRESS */
+  .progress-bar { background:var(--border); border-radius:20px; height:8px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:20px; transition:width 1s ease; }
+
+  /* AI INDICATOR */
+  .ai-thinking { display:flex; align-items:center; gap:8px; padding:12px 16px; background:var(--navy-pale); border-radius:10px; margin-bottom:12px; }
+  .ai-dots { display:flex; gap:4px; }
+  .ai-dot { width:6px; height:6px; border-radius:50%; background:var(--navy); animation:dot-bounce 1.2s infinite; }
+  .ai-dot:nth-child(2) { animation-delay:0.15s; }
+  .ai-dot:nth-child(3) { animation-delay:0.3s; }
+  .ai-text { font-size:0.825rem; color:var(--navy); font-weight:500; }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; z-index:500; background:rgba(15,29,74,0.55); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+  .modal-overlay.active { display:flex; }
+  .modal { background:var(--white); border-radius:20px; padding:32px; width:100%; max-width:520px; animation:fadeIn 0.3s ease; box-shadow:var(--shadow-lg); }
+  .modal-title { font-size:1.2rem; font-weight:800; margin-bottom:6px; }
+  .modal-sub { font-size:0.85rem; color:var(--text-muted); margin-bottom:24px; }
+  .modal-footer { display:flex; gap:10px; margin-top:24px; }
+  .btn-secondary { flex:1; padding:13px; border:1.5px solid var(--border); border-radius:10px; background:var(--white); font-family:'Manrope',sans-serif; font-size:0.9rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+  .btn-secondary:hover { border-color:var(--navy); background:var(--navy-pale); }
+  .btn-green { flex:1; padding:13px; background:linear-gradient(135deg,var(--green),var(--green-light)); border:none; border-radius:10px; color:#fff; font-family:'Manrope',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.2s; }
+  .btn-green:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(26,124,62,0.35); }
+
+  /* SCAN ANIMATION */
+  .scan-container { background:var(--navy-pale); border-radius:16px; padding:32px; text-align:center; margin-bottom:16px; }
+  .scan-ring { width:100px; height:100px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--green-light); margin:0 auto; animation:spin 1s linear infinite; display:flex; align-items:center; justify-content:center; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .scan-inner { width:80px; height:80px; border-radius:50%; background:var(--white); display:flex; align-items:center; justify-content:center; font-size:2rem; }
+
+  /* CHIP */
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:0.78rem; font-weight:600; }
+  .chip-navy { background:var(--navy-pale); color:var(--navy); }
+  .chip-green { background:var(--green-pale); color:var(--green); }
+
+  /* MOBILE TOGGLE */
+  .mobile-toggle { display:none; }
+  @media(max-width:1024px) {
+    .stats-grid { grid-template-columns:repeat(2,1fr); }
+    .grid-2,.grid-3 { grid-template-columns:1fr; }
+  }
+  @media(max-width:768px) {
+    .sidebar { transform:translateX(-260px); }
+    .sidebar.open { transform:translateX(0); }
+    .main { margin-left:0; padding:16px; }
+    .mobile-toggle { display:flex; position:fixed; top:16px; left:16px; z-index:200; width:40px; height:40px; border-radius:10px; background:var(--white); border:1.5px solid var(--border); align-items:center; justify-content:center; cursor:pointer; }
+    .stats-grid { grid-template-columns:1fr 1fr; }
+    .topbar-title { font-size:1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 8 L88 25 L88 55 C88 74 70 88 50 95 C30 88 12 74 12 55 L12 25 Z" fill="white" opacity="0.15"/>
+      <path d="M50 8 L88 25 L88 55 C88 74 70 88 50 95 C30 88 12 74 12 55 L12 25 Z" stroke="white" stroke-width="2" fill="none"/>
+      <circle cx="50" cy="48" r="18" fill="white" opacity="0.9"/>
+      <circle cx="50" cy="48" r="10" fill="#1a2d6b"/>
+      <circle cx="50" cy="48" r="5" fill="white"/>
+      <line x1="50" y1="30" x2="50" y2="20" stroke="white" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="42" cy="35" r="3" fill="white" opacity="0.7"/>
+      <circle cx="58" cy="35" r="3" fill="white" opacity="0.7"/>
+    </svg>
+  </div>
+  <div class="splash-title">Edu<span style="color:#4ade80">Track</span></div>
+  <div class="splash-sub">Умная система учёта посещаемости</div>
+</div>
+
+<!-- AUTH -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">
+        <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+          <path d="M50 5 L90 22 L90 55 C90 76 72 90 50 98 C28 90 10 76 10 55 L10 22 Z" fill="white" opacity="0.9"/>
+          <circle cx="50" cy="50" r="16" fill="#1a2d6b"/>
+          <circle cx="50" cy="50" r="8" fill="white"/>
+          <circle cx="50" cy="50" r="4" fill="#1a2d6b"/>
+        </svg>
+      </div>
+      <div class="auth-logo-text"><span>Edu</span><em>Track</em></div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuth('login')">Войти</div>
+      <div class="auth-tab" onclick="switchAuth('register')">Регистрация</div>
+    </div>
+    <!-- LOGIN -->
+    <div id="loginForm">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" placeholder="example@college.kz" id="loginEmail"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Пароль</label>
+        <input class="form-input" type="password" placeholder="••••••••" id="loginPass"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Роль</label>
+        <select class="form-select" id="loginRole">
+          <option value="admin">Администратор</option>
+          <option value="curator">Куратор</option>
+          <option value="teacher">Преподаватель</option>
+          <option value="student">Студент</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Войти в систему</button>
+    </div>
+    <!-- REGISTER -->
+    <div id="registerForm" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Полное имя</label>
+        <input class="form-input" type="text" placeholder="Алия Сейткали" id="regName"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" placeholder="example@college.kz" id="regEmail"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Пароль</label>
+        <input class="form-input" type="password" placeholder="Минимум 8 символов" id="regPass"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Роль</label>
+        <select class="form-select" id="regRole">
+          <option value="admin">Администратор</option>
+          <option value="curator">Куратор</option>
+          <option value="teacher">Преподаватель</option>
+          <option value="student">Студент</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Группа / Кафедра</label>
+        <input class="form-input" type="text" placeholder="ИТ-23-1 / Информатика" id="regGroup"/>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Создать аккаунт</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Mobile toggle -->
+  <button class="mobile-toggle" onclick="toggleSidebar()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">
+          <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+            <path d="M50 5 L90 22 L90 55 C90 76 72 90 50 98 C28 90 10 76 10 55 L10 22 Z" fill="white" opacity="0.9"/>
+            <circle cx="50" cy="50" r="16" fill="#1a2d6b"/>
+            <circle cx="50" cy="50" r="8" fill="white"/>
+            <circle cx="50" cy="50" r="4" fill="#1a2d6b"/>
+          </svg>
+        </div>
+        <div class="sidebar-logo-text">Edu<em>Track</em></div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebarAvatar">АС</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Алия Сейткали</div>
+        <div class="user-role" id="sidebarRole">Куратор • ИТ-23-1</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <!-- filled by JS -->
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Выйти из системы
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Панель управления</div>
+          <div class="topbar-subtitle" id="dateDisplay">Четверг, 23 апреля 2026</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn-icon" onclick="showPage('notifications')" title="Уведомления">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <div class="notif-dot"></div>
+          </button>
+          <button class="btn-icon" onclick="openMarkModal()" title="Отметить посещаемость">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Посещаемость сегодня</div>
+            <div class="card-action" onclick="showPage('attendance')">Все →</div>
+          </div>
+          <div class="table-wrap">
+            <table id="dashboardTable"></table>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Уведомления</div>
+              <div class="card-action" onclick="showPage('notifications')">Все →</div>
+            </div>
+            <div class="notif-list" id="dashNotifList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Расписание сегодня</div>
+          </div>
+          <div id="scheduleList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Посещаемость по группам</div>
+          </div>
+          <div id="groupStats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE PAGE -->
+    <div class="page" id="page-attendance">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Посещаемость</div>
+          <div class="topbar-subtitle">Учёт присутствия студентов</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn-icon" onclick="openMarkModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Список студентов — ИТ-23-1</div>
+          <div style="display:flex;gap:8px;">
+            <select class="form-select" style="width:auto;padding:8px 12px;font-size:0.8rem;" onchange="filterAttendance(this.value)">
+              <option value="all">Все</option>
+              <option value="present">Присутствуют</option>
+              <option value="absent">Отсутствуют</option>
+              <option value="late">Опоздали</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="fullAttendanceTable"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS PAGE -->
+    <div class="page" id="page-notifications">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Уведомления</div>
+          <div class="topbar-subtitle">Все события системы</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="notif-list" id="fullNotifList"></div>
+      </div>
+    </div>
+
+    <!-- TEACHER ABSENCE PAGE -->
+    <div class="page" id="page-substitute">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">ИИ-замена преподавателей</div>
+          <div class="topbar-subtitle">Автоматический подбор свободных преподавателей</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Сообщить об отсутствии</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Преподаватель</label>
+            <select class="form-select" id="absentTeacher">
+              <option>Сейткали А.Б. — Программирование</option>
+              <option>Ахметов Д.К. — Математика</option>
+              <option>Нурова З.Т. — История</option>
+              <option>Байжанов С.Р. — Физика</option>
+              <option>Касымова Г.М. — Английский язык</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Причина</label>
+            <select class="form-select" id="absenceReason">
+              <option>Болезнь</option>
+              <option>Командировка</option>
+              <option>Семейные обстоятельства</option>
+              <option>Повышение квалификации</option>
+              <option>Другое</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Дата и время</label>
+            <input class="form-input" type="datetime-local" id="absenceDate"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Пара / Группа</label>
+            <input class="form-input" type="text" placeholder="2-я пара, ИТ-23-1" id="absenceLesson"/>
+          </div>
+          <button class="btn-primary" onclick="findSubstitute()">Найти замену (ИИ)</button>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Доступные преподаватели</div>
+            <span class="chip chip-green" id="aiStatus">ИИ готов</span>
+          </div>
+          <div id="aiThinkingArea"></div>
+          <div id="substituteResults"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:0">
+        <div class="card-header">
+          <div class="card-title">История замен</div>
+        </div>
+        <div class="table-wrap">
+          <table id="substituteHistory"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE PAGE -->
+    <div class="page" id="page-schedule">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Расписание</div>
+          <div class="topbar-subtitle">Занятия на неделю</div>
+        </div>
+      </div>
+      <div class="card">
+        <div id="fullSchedule"></div>
+      </div>
+    </div>
+
+    <!-- STUDENTS PAGE -->
+    <div class="page" id="page-students">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Студенты</div>
+          <div class="topbar-subtitle">Управление базой студентов</div>
+        </div>
+        <button class="btn-icon" onclick="openAddStudentModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Список студентов</div>
+          <input class="form-input" style="width:220px;padding:8px 12px;font-size:0.85rem;" placeholder="Поиск..." oninput="searchStudents(this.value)" id="studentSearch"/>
+        </div>
+        <div class="table-wrap">
+          <table id="studentsTable"></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS PAGE -->
+    <div class="page" id="page-reports">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Отчёты</div>
+          <div class="topbar-subtitle">Аналитика посещаемости</div>
+        </div>
+      </div>
+      <div class="stats-grid" id="reportStats"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Посещаемость по месяцам</div></div>
+          <div id="monthlyChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Рейтинг групп</div></div>
+          <div id="groupRating"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Настройки</div>
+          <div class="topbar-subtitle">Параметры системы</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Профиль</div></div>
+          <div class="form-group">
+            <label class="form-label">Имя</label>
+            <input class="form-input" type="text" id="settingName"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" id="settingEmail"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Телефон</label>
+            <input class="form-input" type="text" placeholder="+7 (700) 000-00-00" id="settingPhone"/>
+          </div>
+          <button class="btn-primary" onclick="saveSettings()">Сохранить</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Уведомления</div></div>
+          <div style="display:flex;flex-direction:column;gap:16px;" id="notifSettings"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MARK ATTENDANCE MODAL -->
+<div class="modal-overlay" id="markModal">
+  <div class="modal">
+    <div class="modal-title">Отметить посещаемость</div>
+    <div class="modal-sub">Выберите статус для студента</div>
+    <div class="form-group">
+      <label class="form-label">Студент</label>
+      <select class="form-select" id="markStudent"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Статус</label>
+      <select class="form-select" id="markStatus">
+        <option value="present">Присутствует</option>
+        <option value="absent">Отсутствует</option>
+        <option value="late">Опоздал(а)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Пара</label>
+      <select class="form-select" id="markLesson">
+        <option>1-я пара (8:00–9:30)</option>
+        <option>2-я пара (9:40–11:10)</option>
+        <option>3-я пара (11:20–12:50)</option>
+        <option>4-я пара (13:30–15:00)</option>
+        <option>5-я пара (15:10–16:40)</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('markModal')">Отмена</button>
+      <button class="btn-green" onclick="submitAttendance()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD STUDENT MODAL -->
+<div class="modal-overlay" id="addStudentModal">
+  <div class="modal">
+    <div class="modal-title">Добавить студента</div>
+    <div class="modal-sub">Новый студент в группе ИТ-23-1</div>
+    <div class="form-group">
+      <label class="form-label">ФИО</label>
+      <input class="form-input" type="text" placeholder="Иванов Иван Иванович" id="newStudentName"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" placeholder="student@college.kz" id="newStudentEmail"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Телефон</label>
+      <input class="form-input" type="text" placeholder="+7 (700) 000-00-00" id="newStudentPhone"/>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('addStudentModal')">Отмена</button>
+      <button class="btn-green" onclick="addStudent()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="notifToast"></div>
+
+<script>
+// ===================== DATA =====================
+const USERS = [
+  {email:'admin@college.kz', pass:'admin123', role:'admin', name:'Администратор', group:'Колледж'},
+  {email:'curator@college.kz', pass:'curator123', role:'curator', name:'Алия Сейткали', group:'ИТ-23-1'},
+  {email:'teacher@college.kz', pass:'teacher123', role:'teacher', name:'Асель Нурова', group:'Информатика'},
+  {email:'student@college.kz', pass:'student123', role:'student', name:'Дамир Ахметов', group:'ИТ-23-1'},
+];
+
+let currentUser = null;
+let users = [...USERS];
+
+const STUDENTS = [
+  {id:1,name:'Ахметов Дамир',email:'d.akhmetov@college.kz',phone:'+7 701 234 5678',group:'ИТ-23-1',status:'present',attendance:94},
+  {id:2,name:'Берекова Айгерим',email:'a.berekova@college.kz',phone:'+7 702 345 6789',group:'ИТ-23-1',status:'present',attendance:89},
+  {id:3,name:'Джаксыбеков Нурлан',email:'n.dzhaksybekov@college.kz',phone:'+7 703 456 7890',group:'ИТ-23-1',status:'absent',attendance:71},
+  {id:4,name:'Ержанова Сауле',email:'s.erzhanova@college.kz',phone:'+7 704 567 8901',group:'ИТ-23-1',status:'present',attendance:97},
+  {id:5,name:'Касымов Арман',email:'a.kasymov@college.kz',phone:'+7 705 678 9012',group:'ИТ-23-1',status:'late',attendance:82},
+  {id:6,name:'Мухамедов Тимур',email:'t.mukhamedov@college.kz',phone:'+7 706 789 0123',group:'ИТ-23-1',status:'present',attendance:91},
+  {id:7,name:'Нурова Жанна',email:'zh.nurova@college.kz',phone:'+7 707 890 1234',group:'ИТ-23-1',status:'absent',attendance:65},
+  {id:8,name:'Сейтжанов Руслан',email:'r.seitzhanov@college.kz',phone:'+7 708 901 2345',group:'ИТ-23-1',status:'present',attendance:88},
+  {id:9,name:'Темирова Айна',email:'a.temirova@college.kz',phone:'+7 709 012 3456',group:'ИТ-23-1',status:'present',attendance:96},
+  {id:10,name:'Утепбергенов Асет',email:'a.utepbergenov@college.kz',phone:'+7 700 123 4567',group:'ИТ-23-1',status:'late',attendance:78},
+];
+
+let students = [...STUDENTS];
+
+const NOTIFICATIONS = [
+  {id:1,type:'absent',icon:'🔴',title:'Джаксыбеков Нурлан не пришёл',desc:'Студент группы ИТ-23-1 отсутствует на 1-й паре. Требуется уведомить родителей.',time:'08:45',urgent:true,unread:true},
+  {id:2,type:'absent',icon:'🔴',title:'Нурова Жанна не пришла',desc:'Студент группы ИТ-23-1 отсутствует. Пропуск не подтверждён.',time:'08:52',urgent:true,unread:true},
+  {id:3,type:'late',icon:'🟡',title:'Касымов Арман опоздал на 15 мин',desc:'Студент отметился при входе в 08:15. Опоздание зафиксировано.',time:'08:18',unread:true},
+  {id:4,type:'arrive',icon:'🟢',title:'Группа ИТ-23-1 начала занятие',desc:'8 из 10 студентов отметились. Занятие началось штатно.',time:'08:00',unread:false},
+  {id:5,type:'teacher',icon:'🔵',title:'Замена преподавателя выполнена',desc:'ИИ-система нашла замену для Байжанова С.Р. — Ахметов Д.К. принял 3-ю пару.',time:'09:10',unread:false},
+  {id:6,type:'arrive',icon:'🟢',title:'Утепбергенов Асет в колледже',desc:'Студент отметился на КПП в 09:05. Зафиксировано опоздание на 2-ю пару.',time:'09:05',unread:false},
+];
+
+let notifications = [...NOTIFICATIONS];
+
+const SCHEDULE = [
+  {time:'08:00–09:30',subject:'Программирование',teacher:'Сейткали А.Б.',room:'304',status:'done'},
+  {time:'09:40–11:10',subject:'Математический анализ',teacher:'Ахметов Д.К.',room:'201',status:'active'},
+  {time:'11:20–12:50',subject:'Базы данных',teacher:'Нурова З.Т.',room:'Лаб.2',status:'upcoming'},
+  {time:'13:30–15:00',subject:'Физика',teacher:'Байжанов С.Р.',room:'305',status:'upcoming'},
+  {time:'15:10–16:40',subject:'Английский язык',teacher:'Касымова Г.М.',room:'112',status:'upcoming'},
+];
+
+const FREE_TEACHERS = [
+  {name:'Ахметов Д.К.',subject:'Математика / Физика',color:'#1a2d6b',initials:'АД',free:'Свободен 2–3 пары'},
+  {name:'Ержанова С.Б.',subject:'Информатика / ИТ',color:'#1a7c3e',initials:'ЕС',free:'Свободна 1–2 пары'},
+  {name:'Касымова Г.М.',subject:'Английский / Каз.яз',color:'#7c3aed',initials:'КГ',free:'Свободна 3 пара'},
+  {name:'Темиров А.Н.',subject:'Химия / Биология',color:'#c2410c',initials:'ТА',free:'Свободен 4–5 пары'},
+];
+
+const SUBSTITUTE_HISTORY = [
+  {date:'23.04.2026',absent:'Байжанов С.Р.',reason:'Болезнь',substitute:'Ахметов Д.К.',group:'ИТ-23-1',status:'done'},
+  {date:'21.04.2026',absent:'Нурова З.Т.',reason:'Командировка',substitute:'Ержанова С.Б.',group:'ЭК-22-2',status:'done'},
+  {date:'18.04.2026',absent:'Касымова Г.М.',reason:'Болезнь',substitute:'Темиров А.Н.',group:'МЕН-24-1',status:'done'},
+];
+
+const NAV_ITEMS = {
+  admin: [
+    {id:'dashboard',label:'Дашборд',icon:'grid'},
+    {id:'attendance',label:'Посещаемость',icon:'check',badge:2},
+    {id:'notifications',label:'Уведомления',icon:'bell',badge:3},
+    {id:'substitute',label:'Замена препод.',icon:'users'},
+    {id:'schedule',label:'Расписание',icon:'calendar'},
+    {id:'students',label:'Студенты',icon:'user'},
+    {id:'reports',label:'Отчёты',icon:'bar-chart'},
+    {id:'settings',label:'Настройки',icon:'settings'},
+  ],
+  curator: [
+    {id:'dashboard',label:'Дашборд',icon:'grid'},
+    {id:'attendance',label:'Посещаемость',icon:'check',badge:2},
+    {id:'notifications',label:'Уведомления',icon:'bell',badge:3},
+    {id:'substitute',label:'Замена препод.',icon:'users'},
+    {id:'schedule',label:'Расписание',icon:'calendar'},
+    {id:'students',label:'Студенты',icon:'user'},
+    {id:'reports',label:'Отчёты',icon:'bar-chart'},
+    {id:'settings',label:'Настройки',icon:'settings'},
+  ],
+  teacher: [
+    {id:'dashboard',label:'Дашборд',icon:'grid'},
+    {id:'attendance',label:'Посещаемость',icon:'check'},
+    {id:'notifications',label:'Уведомления',icon:'bell'},
+    {id:'schedule',label:'Расписание',icon:'calendar'},
+    {id:'reports',label:'Отчёты',icon:'bar-chart'},
+    {id:'settings',label:'Настройки',icon:'settings'},
+  ],
+  student: [
+    {id:'dashboard',label:'Мой дашборд',icon:'grid'},
+    {id:'schedule',label:'Расписание',icon:'calendar'},
+    {id:'notifications',label:'Уведомления',icon:'bell'},
+    {id:'settings',label:'Настройки',icon:'settings'},
+  ],
+};
+
+const ICONS = {
+  grid:`<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+  check:`<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>`,
+  bell:`<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>`,
+  users:`<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`,
+  calendar:`<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  user:`<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  'bar-chart':`<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`,
+  settings:`<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
+};
+
+// ===================== AUTH =====================
+function switchAuth(mode) {
+  document.querySelectorAll('.auth-tab').forEach((t,i)=> t.classList.toggle('active', (mode==='login'&&i===0)||(mode==='register'&&i===1)));
+  document.getElementById('loginForm').style.display = mode==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = mode==='register'?'block':'none';
+}
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const role = document.getElementById('loginRole').value;
+  const found = users.find(u => u.email===email && u.pass===pass);
+  if (found) {
+    currentUser = found;
+    startApp();
+  } else {
+    // demo: allow any email/pass with selected role
+    currentUser = { email, pass, role, name: email.split('@')[0], group: 'ИТ-23-1' };
+    startApp();
+  }
+}
+
+function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value;
+  const role = document.getElementById('regRole').value;
+  const group = document.getElementById('regGroup').value.trim();
+  if (!name||!email||!pass) { showToast('Заполните все поля','Имя, email и пароль обязательны','red'); return; }
+  const newUser = {name,email,pass,role,group};
+  users.push(newUser);
+  currentUser = newUser;
+  startApp();
+}
+
+function startApp() {
+  document.getElementById('authScreen').classList.remove('active');
+  document.getElementById('app').classList.add('active');
+  setupSidebar();
+  renderAll();
+  showPage('dashboard');
+  scheduleAutoNotifications();
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('authScreen').classList.add('active');
+}
+
+// ===================== SIDEBAR =====================
+function setupSidebar() {
+  const initials = currentUser.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('sidebarAvatar').textContent = initials;
+  document.getElementById('sidebarName').textContent = currentUser.name;
+  const roleLabels = {admin:'Администратор',curator:'Куратор',teacher:'Преподаватель',student:'Студент'};
+  document.getElementById('sidebarRole').textContent = `${roleLabels[currentUser.role]} • ${currentUser.group}`;
+
+  const nav = document.getElementById('sidebarNav');
+  const items = NAV_ITEMS[currentUser.role] || NAV_ITEMS.curator;
+  nav.innerHTML = `<div class="nav-section">
+    <div class="nav-section-label">Главное меню</div>
+    ${items.map(item=>`
+      <div class="nav-item" onclick="showPage('${item.id}')" id="nav-${item.id}">
+        ${ICONS[item.icon]||''}
+        ${item.label}
+        ${item.badge?`<span class="nav-badge">${item.badge}</span>`:''}
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ===================== ROUTING =====================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const page = document.getElementById('page-'+id);
+  if (page) page.classList.add('active');
+  const navItem = document.getElementById('nav-'+id);
+  if (navItem) navItem.classList.add('active');
+  if (id==='substitute') renderSubstitutePage();
+  if (id==='reports') renderReports();
+  if (id==='students') renderStudentsTable(students);
+  if (id==='settings') renderSettings();
+  if (id==='schedule') renderFullSchedule();
+  if (id==='attendance') renderFullAttendance(students);
+  if (id==='notifications') renderFullNotifications();
+}
+
+// ===================== RENDER ALL =====================
+function renderAll() {
+  renderStats();
+  renderDashboardTable();
+  renderDashNotifs();
+  renderSchedule();
+  renderGroupStats();
+  renderFullAttendance(students);
+  renderFullNotifications();
+  renderSubstituteHistory();
+  renderMarkModal();
+}
+
+function renderStats() {
+  const present = students.filter(s=>s.status==='present').length;
+  const absent = students.filter(s=>s.status==='absent').length;
+  const late = students.filter(s=>s.status==='late').length;
+  const pct = Math.round(present/students.length*100);
+  const html = [
+    {icon:'👥',cls:'navy',value:students.length,label:'Всего студентов',change:'+2 за месяц',up:true},
+    {icon:'✅',cls:'green',value:present,label:'Присутствуют',change:`${pct}% посещаемость`,up:true},
+    {icon:'❌',cls:'red',value:absent,label:'Отсутствуют',change:'Требует внимания',up:false},
+    {icon:'⏰',cls:'orange',value:late,label:'Опоздали',change:'Сегодня',up:false},
+  ].map((s,i)=>`
+    <div class="stat-card" style="animation-delay:${i*0.08}s">
+      <div class="stat-icon ${s.cls}">${s.icon}</div>
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-change ${s.up?'up':'down'}">${s.change}</div>
+    </div>
+  `).join('');
+  document.getElementById('statsGrid').innerHTML = html;
+}
+
+function renderDashboardTable() {
+  const rows = students.slice(0,5).map(s=>`
+    <tr>
+      <td><strong>${s.name.split(' ').slice(0,2).join(' ')}</strong></td>
+      <td>${badgeHTML(s.status)}</td>
+      <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:${s.attendance}%;background:${s.attendance>85?'var(--green-light)':s.attendance>70?'#f59e0b':'#ef4444'}"></div></div></td>
+    </tr>
+  `).join('');
+  document.getElementById('dashboardTable').innerHTML = `<thead><tr><th>Студент</th><th>Статус</th><th>%</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+function renderDashNotifs() {
+  const html = notifications.slice(0,3).map(n=>`
+    <div class="notif-item ${n.urgent?'urgent':n.type==='arrive'?'success':'unread'}">
+      <div class="notif-icon ${n.urgent?'red':n.type==='arrive'?'green':'blue'}">${n.icon}</div>
+      <div class="notif-body">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('dashNotifList').innerHTML = html;
+}
+
+function renderSchedule() {
+  const html = SCHEDULE.map(s=>`
+    <div class="schedule-item">
+      <div class="schedule-time">${s.time}</div>
+      <div class="schedule-dot ${s.status}"></div>
+      <div class="schedule-info">
+        <div class="schedule-name">${s.subject}</div>
+        <div class="schedule-teacher">${s.teacher}</div>
+      </div>
+      <div class="schedule-room">${s.room}</div>
+    </div>
+  `).join('');
+  document.getElementById('scheduleList').innerHTML = html;
+}
+
+function renderGroupStats() {
+  const groups = [
+    {name:'ИТ-23-1',pct:84,color:'var(--navy)'},
+    {name:'ЭК-22-2',pct:91,color:'var(--green)'},
+    {name:'МЕН-24-1',pct:76,color:'#f59e0b'},
+    {name:'ПР-23-3',pct:88,color:'#7c3aed'},
+  ];
+  const html = groups.map(g=>`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:0.85rem;font-weight:600">${g.name}</span>
+        <span style="font-size:0.85rem;font-weight:700;color:${g.color}">${g.pct}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${g.pct}%;background:${g.color}"></div></div>
+    </div>
+  `).join('');
+  document.getElementById('groupStats').innerHTML = html;
+}
+
+function renderFullAttendance(list) {
+  const rows = list.map(s=>`
+    <tr>
+      <td><strong>${s.name}</strong></td>
+      <td>${s.group}</td>
+      <td>${badgeHTML(s.status)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="progress-bar" style="width:60px"><div class="progress-fill" style="width:${s.attendance}%;background:${s.attendance>85?'var(--green-light)':s.attendance>70?'#f59e0b':'#ef4444'}"></div></div>
+          <span style="font-size:0.8rem;font-weight:600">${s.attendance}%</span>
+        </div>
+      </td>
+      <td>
+        <button onclick="quickMark(${s.id},'present')" style="background:var(--green-pale);color:var(--green);border:none;padding:5px 10px;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;margin-right:4px">✓</button>
+        <button onclick="quickMark(${s.id},'absent')" style="background:#fef2f2;color:#dc2626;border:none;padding:5px 10px;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer">✗</button>
+      </td>
+    </tr>
+  `).join('');
+  const t = document.getElementById('fullAttendanceTable');
+  if (t) t.innerHTML = `<thead><tr><th>ФИО</th><th>Группа</th><th>Статус</th><th>Посещаемость</th><th>Действие</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+function renderFullNotifications() {
+  const html = notifications.map(n=>`
+    <div class="notif-item ${n.urgent?'urgent':n.type==='arrive'?'success':'unread'}">
+      <div class="notif-icon ${n.urgent?'red':n.type==='arrive'?'green':'blue'}">${n.icon}</div>
+      <div class="notif-body">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-desc">${n.desc}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+  const el = document.getElementById('fullNotifList');
+  if (el) el.innerHTML = html;
+}
+
+function renderSubstitutePage() {
+  renderSubstituteResults([]);
+  renderSubstituteHistory();
+  document.getElementById('aiThinkingArea').innerHTML = '';
+  document.getElementById('aiStatus').textContent = 'ИИ готов';
+  document.getElementById('aiStatus').className = 'chip chip-green';
+  // set default datetime
+  const now = new Date(); now.setMinutes(0);
+  const iso = now.toISOString().slice(0,16);
+  const el = document.getElementById('absenceDate');
+  if (el) el.value = iso;
+}
+
+function renderSubstituteResults(teachers) {
+  const el = document.getElementById('substituteResults');
+  if (!el) return;
+  if (!teachers.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:24px">Нажмите «Найти замену» для поиска</div>';
+    return;
+  }
+  el.innerHTML = teachers.map((t,i)=>`
+    <div class="substitute-card" style="animation-delay:${i*0.1}s;animation:fadeIn 0.4s ease both;margin-bottom:10px" onclick="selectSubstitute(this,'${t.name}')">
+      <div class="teacher-row">
+        <div class="teacher-avatar" style="background:${t.color}">${t.initials}</div>
+        <div style="flex:1">
+          <div class="teacher-name">${t.name}</div>
+          <div class="teacher-subject">${t.subject}</div>
+          <div class="free-badge">${t.free}</div>
+        </div>
+        <div style="font-size:1.4rem">${i===0?'⭐':i===1?'✅':'👤'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSubstituteHistory() {
+  const el = document.getElementById('substituteHistory');
+  if (!el) return;
+  const rows = SUBSTITUTE_HISTORY.map(h=>`
+    <tr>
+      <td>${h.date}</td>
+      <td>${h.absent}</td>
+      <td>${h.reason}</td>
+      <td><strong style="color:var(--green)">${h.substitute}</strong></td>
+      <td>${h.group}</td>
+      <td><span class="status-badge badge-present">Выполнено</span></td>
+    </tr>
+  `).join('');
+  el.innerHTML = `<thead><tr><th>Дата</th><th>Отсутствовал</th><th>Причина</th><th>Замена</th><th>Группа</th><th>Статус</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+function renderStudentsTable(list) {
+  const el = document.getElementById('studentsTable');
+  if (!el) return;
+  const rows = list.map(s=>`
+    <tr>
+      <td><strong>${s.name}</strong></td>
+      <td style="font-size:0.8rem;color:var(--text-muted)">${s.email}</td>
+      <td>${s.phone}</td>
+      <td><span class="chip chip-navy">${s.group}</span></td>
+      <td>${badgeHTML(s.status)}</td>
+      <td><span style="font-weight:700;color:${s.attendance>85?'var(--green)':s.attendance>70?'#f59e0b':'#ef4444'}">${s.attendance}%</span></td>
+    </tr>
+  `).join('');
+  el.innerHTML = `<thead><tr><th>ФИО</th><th>Email</th><th>Телефон</th><th>Группа</th><th>Статус</th><th>Посещ.</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+function renderReports() {
+  const present = students.filter(s=>s.status==='present').length;
+  const absent = students.filter(s=>s.status==='absent').length;
+  const avg = Math.round(students.reduce((a,s)=>a+s.attendance,0)/students.length);
+  document.getElementById('reportStats').innerHTML = [
+    {icon:'📊',cls:'navy',value:avg+'%',label:'Средняя посещаемость',change:'По всем группам'},
+    {icon:'✅',cls:'green',value:present,label:'Сегодня присутствуют',change:'Из '+students.length+' студентов'},
+    {icon:'📅',cls:'orange',value:'23',label:'Дней в текущем месяце',change:'Апрель 2026'},
+    {icon:'🏆',cls:'navy',value:'ЭК-22-2',label:'Лучшая группа',change:'91% посещаемость'},
+  ].map((s,i)=>`
+    <div class="stat-card" style="animation-delay:${i*0.08}s">
+      <div class="stat-icon ${s.cls}">${s.icon}</div>
+      <div class="stat-value" style="font-size:1.4rem">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-change up">${s.change}</div>
+    </div>
+  `).join('');
+
+  const months = ['Янв','Фев','Мар','Апр'];
+  const vals = [87,89,85,84];
+  const maxH = 80;
+  document.getElementById('monthlyChart').innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:12px;height:100px;padding:10px 0">
+      ${months.map((m,i)=>`
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:0.75rem;font-weight:700;color:var(--navy)">${vals[i]}%</span>
+          <div style="width:100%;background:${i===3?'var(--navy)':'var(--navy-pale)'};height:${vals[i]/100*maxH}px;border-radius:6px 6px 0 0;transition:height 1s ease"></div>
+          <span style="font-size:0.75rem;color:var(--text-muted)">${m}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  document.getElementById('groupRating').innerHTML = [
+    {name:'ЭК-22-2',pct:91},{name:'ИТ-23-1',pct:84},{name:'ПР-23-3',pct:88},{name:'МЕН-24-1',pct:76}
+  ].sort((a,b)=>b.pct-a.pct).map((g,i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="width:24px;height:24px;border-radius:50%;background:${i===0?'#fbbf24':i===1?'#9ca3af':i===2?'#cd7c2f':'var(--bg)'};display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:${i<3?'#fff':'var(--text-muted)'}">${i+1}</div>
+      <div style="flex:1;font-size:0.875rem;font-weight:600">${g.name}</div>
+      <div style="font-size:0.875rem;font-weight:700;color:${g.pct>85?'var(--green)':'#f59e0b'}">${g.pct}%</div>
+    </div>
+  `).join('');
+}
+
+function renderSettings() {
+  document.getElementById('settingName').value = currentUser.name;
+  document.getElementById('settingEmail').value = currentUser.email;
+  document.getElementById('notifSettings').innerHTML = [
+    {label:'Отсутствие студента',checked:true},
+    {label:'Опоздание студента',checked:true},
+    {label:'Приход студента в колледж',checked:true},
+    {label:'Отсутствие преподавателя',checked:true},
+    {label:'Замена найдена ИИ',checked:true},
+    {label:'Сводка в конце дня',checked:false},
+  ].map(n=>`
+    <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+      <span style="font-size:0.875rem;font-weight:500">${n.label}</span>
+      <input type="checkbox" ${n.checked?'checked':''} style="width:18px;height:18px;accent-color:var(--navy);cursor:pointer"/>
+    </label>
+  `).join('');
+}
+
+function renderFullSchedule() {
+  const days = ['Понедельник','Вторник','Среда','Четверг','Пятница'];
+  const el = document.getElementById('fullSchedule');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      ${days.map((d,i)=>`<button onclick="selectDay(this,${i})" style="padding:8px 16px;border-radius:8px;border:1.5px solid ${i===3?'var(--navy)':'var(--border)'};background:${i===3?'var(--navy-pale)':'var(--white)'};color:${i===3?'var(--navy)':'var(--text-muted)'};font-family:Manrope,sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer">${d}</button>`).join('')}
+    </div>
+    <div id="daySchedule">
+      ${SCHEDULE.map(s=>`
+        <div class="schedule-item" style="border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px">
+          <div class="schedule-time">${s.time}</div>
+          <div class="schedule-dot ${s.status}"></div>
+          <div class="schedule-info">
+            <div class="schedule-name">${s.subject}</div>
+            <div class="schedule-teacher">${s.teacher}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="schedule-room">${s.room}</div>
+            ${s.status==='active'?'<span class="status-badge badge-present">Идёт</span>':s.status==='done'?'<span class="status-badge badge-pending">Завершено</span>':''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderMarkModal() {
+  const el = document.getElementById('markStudent');
+  if (el) el.innerHTML = students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+
+// ===================== ACTIONS =====================
+function badgeHTML(status) {
+  const map = {present:['badge-present','Присутствует'],absent:['badge-absent','Отсутствует'],late:['badge-late','Опоздал'],pending:['badge-pending','Не отмечено']};
+  const [cls,label] = map[status]||map.pending;
+  return `<span class="status-badge ${cls}">${label}</span>`;
+}
+
+function filterAttendance(val) {
+  const list = val==='all'? students : students.filter(s=>s.status===val);
+  renderFullAttendance(list);
+}
+
+function quickMark(id, status) {
+  const s = students.find(s=>s.id===id);
+  if (!s) return;
+  s.status = status;
+  renderFullAttendance(students);
+  renderDashboardTable();
+  renderStats();
+  const label = status==='present'?'присутствует':'отсутствует';
+  addNotification(status==='present'?'arrive':'absent', `${s.name.split(' ')[0]} — статус обновлён`, `Студент теперь ${label}`, status==='absent');
+  showToast(status==='present'?'✅ Отмечено':'❌ Отмечено', `${s.name.split(' ').slice(0,2).join(' ')} — ${label}`, status==='present'?'green':'red');
+}
+
+function openMarkModal() {
+  document.getElementById('markModal').classList.add('active');
+}
+
+function openAddStudentModal() {
+  document.getElementById('addStudentModal').classList.add('active');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function submitAttendance() {
+  const id = parseInt(document.getElementById('markStudent').value);
+  const status = document.getElementById('markStatus').value;
+  quickMark(id, status);
+  closeModal('markModal');
+}
+
+function addStudent() {
+  const name = document.getElementById('newStudentName').value.trim();
+  const email = document.getElementById('newStudentEmail').value.trim();
+  const phone = document.getElementById('newStudentPhone').value.trim();
+  if (!name) { showToast('Ошибка','Введите имя студента','red'); return; }
+  const newS = {id:students.length+1,name,email,phone,group:'ИТ-23-1',status:'pending',attendance:100};
+  students.push(newS);
+  renderStudentsTable(students);
+  renderMarkModal();
+  renderStats();
+  closeModal('addStudentModal');
+  showToast('✅ Студент добавлен',`${name} добавлен в группу ИТ-23-1`,'green');
+  document.getElementById('newStudentName').value='';
+  document.getElementById('newStudentEmail').value='';
+  document.getElementById('newStudentPhone').value='';
+}
+
+function searchStudents(q) {
+  const filtered = students.filter(s=>s.name.toLowerCase().includes(q.toLowerCase())||s.email.toLowerCase().includes(q.toLowerCase()));
+  renderStudentsTable(filtered);
+}
+
+function findSubstitute() {
+  const teacher = document.getElementById('absentTeacher').value;
+  const reason = document.getElementById('absenceReason').value;
+  const aiArea = document.getElementById('aiThinkingArea');
+  const statusEl = document.getElementById('aiStatus');
+  statusEl.textContent = 'ИИ думает...';
+  statusEl.className = 'chip chip-navy';
+  aiArea.innerHTML = `
+    <div class="ai-thinking">
+      <div class="ai-dots"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+      <div class="ai-text">ИИ анализирует расписание и ищет свободных преподавателей...</div>
+    </div>
+  `;
+  renderSubstituteResults([]);
+  setTimeout(()=>{
+    aiArea.innerHTML = `
+      <div class="ai-thinking" style="background:var(--green-pale)">
+        <span style="font-size:1rem">✅</span>
+        <div class="ai-text" style="color:var(--green)">Найдено ${FREE_TEACHERS.length} свободных преподавателя. Рекомендован: ${FREE_TEACHERS[0].name}</div>
+      </div>
+    `;
+    statusEl.textContent = 'Замена найдена';
+    statusEl.className = 'chip chip-green';
+    renderSubstituteResults(FREE_TEACHERS);
+    addNotification('teacher','Замена найдена ИИ-системой',`Для ${teacher} найдена замена: ${FREE_TEACHERS[0].name}`,false);
+    showToast('🤖 ИИ нашёл замену',`Рекомендуется: ${FREE_TEACHERS[0].name}`,'green');
+  }, 2200);
+}
+
+function selectSubstitute(el, name) {
+  document.querySelectorAll('.substitute-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  showToast('✅ Замена назначена',`${name} назначен(а) на занятие`,'green');
+}
+
+function saveSettings() {
+  currentUser.name = document.getElementById('settingName').value;
+  currentUser.email = document.getElementById('settingEmail').value;
+  document.getElementById('sidebarName').textContent = currentUser.name;
+  const initials = currentUser.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('sidebarAvatar').textContent = initials;
+  showToast('✅ Сохранено','Настройки профиля обновлены','green');
+}
+
+function selectDay(btn, idx) {
+  document.querySelectorAll('#fullSchedule button').forEach(b=>{
+    b.style.background='var(--white)'; b.style.color='var(--text-muted)'; b.style.borderColor='var(--border)';
+  });
+  btn.style.background='var(--navy-pale)'; btn.style.color='var(--navy)'; btn.style.borderColor='var(--navy)';
+}
+
+// ===================== NOTIFICATIONS =====================
+function addNotification(type, title, desc, urgent=false) {
+  const now = new Date();
+  const time = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  const icons = {absent:'🔴',arrive:'🟢',teacher:'🔵',late:'🟡'};
+  notifications.unshift({id:Date.now(),type,icon:icons[type]||'🔔',title,desc,time,urgent,unread:true});
+  renderDashNotifs();
+  renderFullNotifications();
+  // update badge
+  const badge = document.querySelector('#nav-notifications .nav-badge');
+  const unread = notifications.filter(n=>n.unread).length;
+  if (badge) badge.textContent = unread;
+}
+
+function showToast(title, desc, type='navy') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = {green:'✅',red:'❌',navy:'🔔'};
+  toast.innerHTML = `<div class="toast-icon">${icons[type]||'🔔'}</div><div><div class="toast-title">${title}</div><div class="toast-desc">${desc}</div></div>`;
+  const container = document.getElementById('notifToast');
+  container.appendChild(toast);
+  setTimeout(()=>{ toast.style.opacity='0'; toast.style.transform='translateX(100%)'; toast.style.transition='all 0.3s ease'; setTimeout(()=>toast.remove(),300); }, 4000);
+}
+
+function scheduleAutoNotifications() {
+  // Simulate real-time notifications
+  setTimeout(()=>{
+    addNotification('absent','Нурова Жанна не пришла на занятие','Студент группы ИТ-23-1 отсутствует на 3-й паре',true);
+    showToast('⚠️ Пропуск занятия','Нурова Жанна — 3-я пара','red');
+  }, 8000);
+  setTimeout(()=>{
+    addNotification('arrive','Утепбергенов Асет зашёл в колледж','Студент отметился на КПП в 11:05',false);
+    showToast('🟢 Студент в колледже','Утепбергенов Асет прибыл','green');
+  }, 15000);
+  setTimeout(()=>{
+    addNotification('teacher','Ахметов Д.К. не может вести 4-ю пару','Причина: врачебный приём. ИИ ищет замену...',true);
+    showToast('🤖 Ищу замену...','Ахметов Д.К. отсутствует на 4-й паре','navy');
+  }, 22000);
+}
+
+// ===================== INIT =====================
+setTimeout(()=>{
+  document.getElementById('splash').classList.add('hide');
+  setTimeout(()=>{
+    document.getElementById('authScreen').classList.add('active');
+    // Demo auto-login hint
+    const hint = document.createElement('div');
+    hint.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;padding:8px 16px;border-radius:8px;font-size:0.78rem;z-index:1000;text-align:center';
+    hint.innerHTML = 'Демо: curator@college.kz / curator123<br>или любой email и пароль';
+    document.body.appendChild(hint);
+    setTimeout(()=>hint.remove(), 5000);
+  }, 600);
+}, 2000);
+
+document.addEventListener('click', e=>{
+  if(e.target===document.getElementById('markModal')) closeModal('markModal');
+  if(e.target===document.getElementById('addStudentModal')) closeModal('addStudentModal');
+});
+</script>
+</body>
+</html>
